@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人生轨迹</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .navbar {
+            background: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .navbar-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .main-content {
+            margin-top: 70px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: calc(100vh - 70px);
+        }
+
+        .thumbnail-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            height: 150px;
+            position: relative;
+        }
+
+        .thumbnail-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .thumbnail-canvas {
+            width: 100%;
+            height: 100px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .selection-box {
+            position: absolute;
+            border: 2px solid #3498db;
+            background: rgba(52, 152, 219, 0.3);
+            cursor: pointer;
+            display: none;
+        }
+
+        .selection-box.active {
+            display: block;
+        }
+
+        .thumbnail-canvas {
+            cursor: crosshair;
+        }
+
+        .main-chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chart-type-btn {
+            padding: 6px 12px;
+            border: 1px solid #3498db;
+            background: white;
+            color: #3498db;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chart-type-btn.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .chart-canvas {
+            flex: 1;
+            min-height: 400px;
+            max-height: 80vh;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .color-picker-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-input {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .gradient-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gradient-colors {
+            display: none;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .gradient-colors.active {
+            display: flex;
+        }
+
+        .importance-slider {
+            width: 100%;
+        }
+
+        .importance-value {
+            text-align: center;
+            font-weight: bold;
+            color: #3498db;
+            margin-top: 5px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: auto;
+            z-index: 9999;
+            max-width: 300px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            word-wrap: break-word;
+            white-space: normal;
+        }
+
+        .tooltip-date {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .tooltip-name {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .tooltip-description {
+            color: #ccc;
+            margin-bottom: 5px;
+        }
+
+        .tooltip-importance {
+            color: #3498db;
+            margin-bottom: 8px;
+        }
+
+        .tooltip-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .tooltip-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tooltip-btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .tooltip-btn-edit:hover {
+            background: #2980b9;
+        }
+
+        .tooltip-btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .tooltip-btn-delete:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>人生轨迹</h1>
+        <div class="navbar-actions">
+            <button class="btn btn-primary" id="addEventBtn">
+                <span>+</span> 添加事件
+            </button>
+            <button class="btn btn-secondary" id="exportBtn">
+                <span>📷</span> 导出截图
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="thumbnail-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div class="thumbnail-title">轨迹缩略图（拖动选择范围）</div>
+                <button class="btn btn-sm btn-primary" id="selectAllBtn">全选</button>
+            </div>
+            <div class="thumbnail-canvas" id="thumbnailCanvas">
+                <canvas id="thumbnailChart"></canvas>
+                <div class="selection-box" id="selectionBox"></div>
+            </div>
+        </div>
+
+        <div class="main-chart-container">
+            <div class="chart-header">
+                <div class="chart-title">人生轨迹图</div>
+                <div class="chart-controls">
+                    <button class="chart-type-btn active" data-type="line">曲线图</button>
+                    <button class="chart-type-btn" data-type="bar">条状图</button>
+                </div>
+            </div>
+            <div class="chart-canvas" id="mainChartContainer">
+                <canvas id="mainChart"></canvas>
+                <div class="tooltip" id="tooltip"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addEventModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">添加事件</h2>
+                <button class="close-btn" id="closeAddModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">事件时间 *</label>
+                <input type="datetime-local" class="form-input" id="eventDate" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">事件名称（15字以内）*</label>
+                <input type="text" class="form-input" id="eventName" maxlength="15" placeholder="请输入事件名称" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">事件描述</label>
+                <textarea class="form-textarea" id="eventDescription" placeholder="请输入事件描述"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">心情颜色</label>
+                <div class="color-picker-container">
+                    <input type="color" class="color-input" id="eventColor" value="#3498db">
+                    <div class="gradient-toggle">
+                        <input type="checkbox" id="useGradient">
+                        <label for="useGradient">使用渐变色</label>
+                    </div>
+                </div>
+                <div class="gradient-colors" id="gradientColors">
+                    <input type="color" class="color-input" id="eventColor2" value="#9b59b6">
+                    <span>到</span>
+                    <input type="color" class="color-input" id="eventColor3" value="#e74c3c">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">事件重要程度（-100 到 100）</label>
+                <input type="range" class="importance-slider" id="eventImportance" min="-100" max="100" value="50">
+                <div class="importance-value" id="importanceValue">50</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelAddEvent">取消</button>
+                <button class="btn btn-success" id="confirmAddEvent">完成</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">导出截图</h2>
+                <button class="close-btn" id="closeExportModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">时间范围</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="date" class="form-input" id="exportStartDate">
+                    <span>至</span>
+                    <input type="date" class="form-input" id="exportEndDate">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">图片样式</label>
+                <div class="chart-controls">
+                    <button class="chart-type-btn active" data-type="line" id="exportLineBtn">曲线图</button>
+                    <button class="chart-type-btn" data-type="bar" id="exportBarBtn">条状图</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelExport">取消</button>
+                <button class="btn btn-success" id="confirmExport">导出</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class LifeTimeline {
+            constructor() {
+                this.events = [];
+                this.chartType = 'line';
+                this.selectionRange = { start: 0, end: 100 };
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setupThumbnailInteraction();
+                this.setupMainChartInteraction();
+                this.loadSampleData();
+                this.addDefaultBirthEvent();
+                this.render();
+            }
+
+            setupEventListeners() {
+                document.getElementById('addEventBtn').addEventListener('click', () => this.openAddEventModal());
+                document.getElementById('exportBtn').addEventListener('click', () => this.openExportModal());
+                document.getElementById('closeAddModal').addEventListener('click', () => this.closeAddEventModal());
+                document.getElementById('cancelAddEvent').addEventListener('click', () => this.closeAddEventModal());
+                document.getElementById('confirmAddEvent').addEventListener('click', () => this.addEvent());
+                document.getElementById('closeExportModal').addEventListener('click', () => this.closeExportModal());
+                document.getElementById('cancelExport').addEventListener('click', () => this.closeExportModal());
+                document.getElementById('confirmExport').addEventListener('click', () => this.exportChart());
+                document.getElementById('selectAllBtn').addEventListener('click', () => this.selectAll());
+
+                document.getElementById('useGradient').addEventListener('change', (e) => {
+                    document.getElementById('gradientColors').classList.toggle('active', e.target.checked);
+                });
+
+                document.getElementById('eventImportance').addEventListener('input', (e) => {
+                    document.getElementById('importanceValue').textContent = e.target.value;
+                });
+
+                document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        if (e.target.closest('#exportModal')) return;
+                        document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.chartType = e.target.dataset.type;
+                        this.renderMainChart();
+                    });
+                });
+
+                document.getElementById('exportLineBtn').addEventListener('click', (e) => {
+                    document.querySelectorAll('#exportModal .chart-type-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+
+                document.getElementById('exportBarBtn').addEventListener('click', (e) => {
+                    document.querySelectorAll('#exportModal .chart-type-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            }
+
+            selectAll() {
+                const selectionBox = document.getElementById('selectionBox');
+                const thumbnailCanvas = document.getElementById('thumbnailCanvas');
+                
+                selectionBox.style.left = '0';
+                selectionBox.style.top = '0';
+                selectionBox.style.width = thumbnailCanvas.offsetWidth + 'px';
+                selectionBox.style.height = thumbnailCanvas.offsetHeight + 'px';
+                selectionBox.classList.add('active');
+                
+                this.selectionRange = { start: 0, end: 100 };
+                this.renderMainChart();
+            }
+
+            setupThumbnailInteraction() {
+                const selectionBox = document.getElementById('selectionBox');
+                const thumbnailCanvas = document.getElementById('thumbnailCanvas');
+                let isDrawing = false;
+                let startX, startY;
+
+                thumbnailCanvas.addEventListener('mousedown', (e) => {
+                    isDrawing = true;
+                    const rect = thumbnailCanvas.getBoundingClientRect();
+                    startX = e.clientX - rect.left;
+                    startY = e.clientY - rect.top;
+                    
+                    selectionBox.style.left = startX + 'px';
+                    selectionBox.style.top = startY + 'px';
+                    selectionBox.style.width = '0';
+                    selectionBox.style.height = '0';
+                    selectionBox.classList.add('active');
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDrawing) return;
+                    
+                    const rect = thumbnailCanvas.getBoundingClientRect();
+                    const currentX = e.clientX - rect.left;
+                    const currentY = e.clientY - rect.top;
+                    
+                    const width = currentX - startX;
+                    const height = currentY - startY;
+                    
+                    selectionBox.style.left = (width > 0 ? startX : currentX) + 'px';
+                    selectionBox.style.top = (height > 0 ? startY : currentY) + 'px';
+                    selectionBox.style.width = Math.abs(width) + 'px';
+                    selectionBox.style.height = Math.abs(height) + 'px';
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDrawing) {
+                        isDrawing = false;
+                        this.updateSelectionRange();
+                        this.renderMainChart();
+                    }
+                });
+
+                // 移除点击空白处取消选择的功能，保持高亮直到下次选择
+            }
+
+            setupMainChartInteraction() {
+                const mainChart = document.getElementById('mainChart');
+                const tooltip = document.getElementById('tooltip');
+                let tooltipTimeout = null;
+                let currentEvent = null;
+
+                const showTooltip = (event, mouseX, mouseY) => {
+                    clearTimeout(tooltipTimeout);
+                    
+                    tooltip.innerHTML = `
+                        <div class="tooltip-date">${this.formatDate(event.date)}</div>
+                        <div class="tooltip-name">${event.name}</div>
+                        <div class="tooltip-description">${event.description || '无描述'}</div>
+                        <div class="tooltip-importance">重要程度: ${event.importance}</div>
+                        <div class="tooltip-actions">
+                            <button class="tooltip-btn tooltip-btn-edit" data-event-id="${event.id}">修改</button>
+                            <button class="tooltip-btn tooltip-btn-delete" data-event-id="${event.id}">删除</button>
+                        </div>
+                    `;
+                    
+                    setTimeout(() => {
+                        const editBtn = tooltip.querySelector('.tooltip-btn-edit');
+                        const deleteBtn = tooltip.querySelector('.tooltip-btn-delete');
+                        
+                        if (editBtn) {
+                            editBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                this.editEvent(event.id);
+                            });
+                        }
+                        
+                        if (deleteBtn) {
+                            deleteBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                this.deleteEvent(event.id);
+                            });
+                        }
+                    }, 0);
+                    
+                    tooltip.style.display = 'block';
+                    
+                    const rect = mainChart.getBoundingClientRect();
+                    const tooltipWidth = tooltip.offsetWidth;
+                    const tooltipHeight = tooltip.offsetHeight;
+                    const chartWidth = rect.width;
+                    const chartHeight = rect.height;
+                    
+                    let left = mouseX + 10;
+                    let top = mouseY + 10;
+                    
+                    if (left + tooltipWidth > chartWidth) {
+                        left = mouseX - tooltipWidth - 10;
+                    }
+                    
+                    if (top + tooltipHeight > chartHeight) {
+                        top = mouseY - tooltipHeight - 10;
+                    }
+                    
+                    left = Math.max(0, left);
+                    top = Math.max(0, top);
+                    
+                    tooltip.style.left = left + 'px';
+                    tooltip.style.top = top + 'px';
+                };
+
+                const hideTooltip = () => {
+                    tooltipTimeout = setTimeout(() => {
+                        tooltip.style.display = 'none';
+                        currentEvent = null;
+                    }, 2000);
+                };
+
+                mainChart.addEventListener('mousemove', (e) => {
+                    const rect = mainChart.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    const event = this.findEventAtPosition(mouseX, mouseY);
+                    
+                    if (event) {
+                        currentEvent = event;
+                        showTooltip(event, mouseX, mouseY);
+                    } else if (currentEvent) {
+                        hideTooltip();
+                    }
+                });
+
+                mainChart.addEventListener('mouseleave', () => {
+                    hideTooltip();
+                });
+
+                tooltip.addEventListener('mouseenter', () => {
+                    clearTimeout(tooltipTimeout);
+                });
+
+                tooltip.addEventListener('mouseleave', () => {
+                    hideTooltip();
+                });
+            }
+
+            updateSelectionRange() {
+                const selectionBox = document.getElementById('selectionBox');
+                const thumbnailCanvas = document.getElementById('thumbnailCanvas');
+                
+                if (!selectionBox.classList.contains('active')) {
+                    this.selectionRange = { start: 0, end: 100 };
+                    return;
+                }
+                
+                const left = parseInt(selectionBox.style.left) || 0;
+                const width = parseInt(selectionBox.style.width) || 0;
+                const canvasWidth = thumbnailCanvas.offsetWidth;
+                
+                this.selectionRange.start = (left / canvasWidth) * 100;
+                this.selectionRange.end = ((left + width) / canvasWidth) * 100;
+            }
+
+            findEventAtPosition(mouseX, mouseY) {
+                const canvas = document.getElementById('mainChart');
+                const rect = canvas.getBoundingClientRect();
+                const width = rect.width;
+                const height = rect.height;
+
+                const filteredEvents = this.getFilteredEvents();
+                if (filteredEvents.length === 0) return null;
+
+                const padding = 60;
+                const chartWidth = width - padding * 2;
+                const chartHeight = height - padding * 2;
+                const centerX = width / 2;
+                const centerY = height / 2;
+
+                for (const event of filteredEvents) {
+                    const eventX = centerX + (this.getTimeIndex(event.date) - 0.5) * chartWidth;
+                    const eventY = centerY - (event.importance / 100) * (chartHeight / 2);
+                    
+                    const distance = Math.sqrt(Math.pow(mouseX - eventX, 2) + Math.pow(mouseY - eventY, 2));
+                    if (distance < 15) {
+                        return event;
+                    }
+                }
+                return null;
+            }
+
+            openAddEventModal() {
+                document.getElementById('addEventModal').classList.add('active');
+                const now = new Date();
+                document.getElementById('eventDate').value = now.toISOString().slice(0, 16);
+            }
+
+            closeAddEventModal() {
+                document.getElementById('addEventModal').classList.remove('active');
+                this.resetAddEventForm();
+            }
+
+            resetAddEventForm() {
+                document.getElementById('eventName').value = '';
+                document.getElementById('eventDescription').value = '';
+                document.getElementById('eventColor').value = '#3498db';
+                document.getElementById('eventImportance').value = '50';
+                document.getElementById('importanceValue').textContent = '50';
+                document.getElementById('useGradient').checked = false;
+                document.getElementById('gradientColors').classList.remove('active');
+            }
+
+            addEvent() {
+                const date = document.getElementById('eventDate').value;
+                const name = document.getElementById('eventName').value.trim();
+                const description = document.getElementById('eventDescription').value.trim();
+                const color = document.getElementById('eventColor').value;
+                const useGradient = document.getElementById('useGradient').checked;
+                const color2 = document.getElementById('eventColor2').value;
+                const color3 = document.getElementById('eventColor3').value;
+                const importance = parseInt(document.getElementById('eventImportance').value);
+
+                if (!date || !name) {
+                    alert('请填写事件时间和名称');
+                    return;
+                }
+
+                const event = {
+                    id: Date.now(),
+                    date: new Date(date),
+                    name,
+                    description,
+                    color: useGradient ? { start: color, middle: color2, end: color3 } : color,
+                    importance
+                };
+
+                this.events.push(event);
+                this.events.sort((a, b) => a.date - b.date);
+                this.render();
+                this.closeAddEventModal();
+            }
+
+            openExportModal() {
+                document.getElementById('exportModal').classList.add('active');
+                const filteredEvents = this.getFilteredEvents();
+                if (filteredEvents.length > 0) {
+                    const minDate = filteredEvents[0].date;
+                    const maxDate = filteredEvents[filteredEvents.length - 1].date;
+                    document.getElementById('exportStartDate').value = minDate.toISOString().slice(0, 10);
+                    document.getElementById('exportEndDate').value = maxDate.toISOString().slice(0, 10);
+                }
+            }
+
+            closeExportModal() {
+                document.getElementById('exportModal').classList.remove('active');
+            }
+
+            exportChart() {
+                const startDate = document.getElementById('exportStartDate').value;
+                const endDate = document.getElementById('exportEndDate').value;
+                const chartType = document.querySelector('#exportModal .chart-type-btn.active').dataset.type;
+
+                if (!startDate || !endDate) {
+                    alert('请选择时间范围');
+                    return;
+                }
+
+                const canvas = document.getElementById('mainChart');
+                const link = document.createElement('a');
+                link.download = `life-timeline-${startDate}-${endDate}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                this.closeExportModal();
+            }
+
+            loadSampleData() {
+                const sampleEvents = [
+                    { id: 1, date: new Date('1990-01-01'), name: '出生', description: '来到这个世界', color: '#3498db', importance: 100 },
+                    { id: 2, date: new Date('2008-09-01'), name: '上大学', description: '开始大学生活', color: '#2ecc71', importance: 80 },
+                    { id: 3, date: new Date('2012-06-30'), name: '毕业', description: '大学毕业', color: '#f39c12', importance: 70 },
+                    { id: 4, date: new Date('2012-07-15'), name: '第一份工作', description: '开始职业生涯', color: '#9b59b6', importance: 85 },
+                    { id: 5, date: new Date('2015-10-01'), name: '结婚', description: '人生大事', color: '#e74c3c', importance: 95 },
+                    { id: 6, date: new Date('2018-05-20'), name: '升职', description: '职业发展', color: '#1abc9c', importance: 60 },
+                    { id: 7, date: new Date('2020-03-15'), name: '买房', description: '有了自己的家', color: '#34495e', importance: 75 },
+                    { id: 8, date: new Date('2023-01-01'), name: '创业', description: '开始创业之旅', color: '#e67e22', importance: 90 }
+                ];
+                this.events = sampleEvents;
+            }
+
+            addDefaultBirthEvent() {
+                const birthEvent = {
+                    id: 0,
+                    date: new Date('1990-01-01'),
+                    name: '出生',
+                    description: '人生的起点',
+                    color: '#3498db',
+                    importance: 100
+                };
+                
+                if (!this.events.some(event => event.name === '出生')) {
+                    this.events.unshift(birthEvent);
+                    this.events.sort((a, b) => a.date - b.date);
+                }
+            }
+
+            editEvent(eventId) {
+                const event = this.events.find(e => e.id === eventId);
+                if (!event) return;
+                
+                document.getElementById('eventDate').value = event.date.toISOString().slice(0, 16);
+                document.getElementById('eventName').value = event.name;
+                document.getElementById('eventDescription').value = event.description || '';
+                document.getElementById('eventColor').value = typeof event.color === 'object' ? event.color.start : event.color;
+                document.getElementById('eventImportance').value = event.importance;
+                document.getElementById('importanceValue').textContent = event.importance;
+                
+                if (typeof event.color === 'object') {
+                    document.getElementById('useGradient').checked = true;
+                    document.getElementById('gradientColors').classList.add('active');
+                    document.getElementById('eventColor2').value = event.color.middle || event.color.start;
+                    document.getElementById('eventColor3').value = event.color.end || event.color.start;
+                } else {
+                    document.getElementById('useGradient').checked = false;
+                    document.getElementById('gradientColors').classList.remove('active');
+                }
+                
+                document.getElementById('addEventModal').classList.add('active');
+                
+                const confirmBtn = document.getElementById('confirmAddEvent');
+                const originalText = confirmBtn.textContent;
+                confirmBtn.textContent = '更新事件';
+                
+                const updateEvent = () => {
+                    const index = this.events.findIndex(e => e.id === eventId);
+                    if (index === -1) return;
+                    
+                    const date = document.getElementById('eventDate').value;
+                    const name = document.getElementById('eventName').value.trim();
+                    const description = document.getElementById('eventDescription').value.trim();
+                    const color = document.getElementById('eventColor').value;
+                    const useGradient = document.getElementById('useGradient').checked;
+                    const color2 = document.getElementById('eventColor2').value;
+                    const color3 = document.getElementById('eventColor3').value;
+                    const importance = parseInt(document.getElementById('eventImportance').value);
+
+                    if (!date || !name) {
+                        alert('请填写事件时间和名称');
+                        return;
+                    }
+
+                    this.events[index] = {
+                        ...this.events[index],
+                        date: new Date(date),
+                        name,
+                        description,
+                        color: useGradient ? { start: color, middle: color2, end: color3 } : color,
+                        importance
+                    };
+
+                    this.events.sort((a, b) => a.date - b.date);
+                    this.render();
+                    this.closeAddEventModal();
+                    
+                    confirmBtn.textContent = originalText;
+                    confirmBtn.removeEventListener('click', updateEvent);
+                };
+                
+                confirmBtn.removeEventListener('click', this.addEvent.bind(this));
+                confirmBtn.addEventListener('click', updateEvent);
+            }
+
+            deleteEvent(eventId) {
+                if (eventId === 0) {
+                    alert('出生事件不能删除');
+                    return;
+                }
+                
+                if (confirm('确定要删除这个事件吗？')) {
+                    this.events = this.events.filter(e => e.id !== eventId);
+                    this.render();
+                    document.getElementById('tooltip').style.display = 'none';
+                }
+            }
+
+            getFilteredEvents() {
+                if (this.events.length === 0) return [];
+                
+                const minDate = this.events[0].date.getTime();
+                const maxDate = this.events[this.events.length - 1].date.getTime();
+                const timeRange = maxDate - minDate;
+                
+                const startTime = minDate + (this.selectionRange.start / 100) * timeRange;
+                const endTime = minDate + (this.selectionRange.end / 100) * timeRange;
+
+                return this.events.filter(event => {
+                    const eventTime = event.date.getTime();
+                    return eventTime >= startTime && eventTime <= endTime;
+                });
+            }
+
+            getTimeIndex(date) {
+                const filteredEvents = this.getFilteredEvents();
+                if (filteredEvents.length <= 1) return 0.5;
+
+                const minDate = filteredEvents[0].date.getTime();
+                const maxDate = filteredEvents[filteredEvents.length - 1].date.getTime();
+                const timeRange = maxDate - minDate;
+                
+                if (timeRange === 0) return 0.5;
+                return (date.getTime() - minDate) / timeRange;
+            }
+
+            formatDate(date) {
+                return date.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            }
+
+            getColor(event) {
+                if (typeof event.color === 'object') {
+                    return event.color;
+                }
+                return event.color;
+            }
+
+            render() {
+                this.renderThumbnail();
+                this.renderMainChart();
+            }
+
+            renderThumbnail() {
+                const canvas = document.getElementById('thumbnailChart');
+                const ctx = canvas.getContext('2d');
+                const container = canvas.parentElement;
+                
+                canvas.width = container.offsetWidth;
+                canvas.height = container.offsetHeight;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (this.events.length === 0) return;
+
+                const padding = 10;
+                const width = canvas.width - padding * 2;
+                const height = canvas.height - padding * 2;
+
+                const minDate = this.events[0].date.getTime();
+                const maxDate = this.events[this.events.length - 1].date.getTime();
+                const timeRange = maxDate - minDate || 1;
+
+                this.events.forEach((event, index) => {
+                    const timeIndex = (event.date.getTime() - minDate) / timeRange;
+                    const x = padding + timeIndex * width;
+                    const y = padding + height / 2 - (event.importance / 100) * (height / 2);
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = typeof event.color === 'object' ? event.color.start : event.color;
+                    ctx.fill();
+                });
+
+                if (this.events.length > 1) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#3498db';
+                    ctx.lineWidth = 2;
+                    
+                    this.events.forEach((event, index) => {
+                        const timeIndex = (event.date.getTime() - minDate) / timeRange;
+                        const x = padding + timeIndex * width;
+                        const y = padding + height / 2 - (event.importance / 100) * (height / 2);
+                        
+                        if (index === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    });
+                    ctx.stroke();
+                }
+            }
+
+            renderMainChart() {
+                const canvas = document.getElementById('mainChart');
+                const ctx = canvas.getContext('2d');
+                const container = canvas.parentElement;
+                
+                canvas.width = container.offsetWidth;
+                canvas.height = container.offsetHeight;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const filteredEvents = this.getFilteredEvents();
+                if (filteredEvents.length === 0) {
+                    ctx.fillStyle = '#999';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('暂无事件数据', canvas.width / 2, canvas.height / 2);
+                    return;
+                }
+
+                const padding = 60;
+                const width = canvas.width - padding * 2;
+                const height = canvas.height - padding * 2;
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 1;
+                ctx.moveTo(padding, centerY);
+                ctx.lineTo(canvas.width - padding, centerY);
+                ctx.stroke();
+
+                if (this.chartType === 'line') {
+                    this.renderLineChart(ctx, filteredEvents, padding, width, height, centerX, centerY);
+                } else {
+                    this.renderBarChart(ctx, filteredEvents, padding, width, height, centerX, centerY);
+                }
+
+                this.renderAxes(ctx, filteredEvents, padding, width, height, centerX, centerY);
+            }
+
+            renderLineChart(ctx, events, padding, width, height, centerX, centerY) {
+                if (events.length === 0) return;
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#3498db';
+                ctx.lineWidth = 3;
+
+                events.forEach((event, index) => {
+                    const x = centerX + (this.getTimeIndex(event.date) - 0.5) * width;
+                    const y = centerY - (event.importance / 100) * (height / 2);
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+
+                events.forEach((event, index) => {
+                    const x = centerX + (this.getTimeIndex(event.date) - 0.5) * width;
+                    const y = centerY - (event.importance / 100) * (height / 2);
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    
+                    const color = this.getColor(event);
+                    if (typeof color === 'object') {
+                        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 8);
+                        gradient.addColorStop(0, color.start);
+                        gradient.addColorStop(0.5, color.middle);
+                        gradient.addColorStop(1, color.end);
+                        ctx.fillStyle = gradient;
+                    } else {
+                        ctx.fillStyle = color;
+                    }
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+            }
+
+            renderBarChart(ctx, events, padding, width, height, centerX, centerY) {
+                const barWidth = Math.min(40, width / (events.length || 1) * 0.6);
+
+                events.forEach((event, index) => {
+                    const x = centerX + (this.getTimeIndex(event.date) - 0.5) * width - barWidth / 2;
+                    const barHeight = Math.abs(event.importance / 100) * (height / 2);
+                    const y = event.importance >= 0 ? centerY - barHeight : centerY;
+
+                    ctx.beginPath();
+                    
+                    const color = this.getColor(event);
+                    if (typeof color === 'object') {
+                        const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
+                        gradient.addColorStop(0, color.start);
+                        gradient.addColorStop(0.5, color.middle);
+                        gradient.addColorStop(1, color.end);
+                        ctx.fillStyle = gradient;
+                    } else {
+                        ctx.fillStyle = color;
+                    }
+                    
+                    ctx.roundRect(x, y, barWidth, barHeight, 4);
+                    ctx.fill();
+                });
+            }
+
+            renderAxes(ctx, events, padding, width, height, centerX, centerY) {
+                const canvas = document.getElementById('mainChart');
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+
+                events.forEach((event, index) => {
+                    const x = centerX + (this.getTimeIndex(event.date) - 0.5) * width;
+                    const y = centerY - (event.importance / 100) * (height / 2);
+                    const labelY = event.importance >= 0 ? y - 20 : y + 30;
+
+                    ctx.fillText(this.formatDate(event.date), x, canvas.height - 20);
+                    
+                    ctx.font = 'bold 12px Arial';
+                    ctx.fillText(event.name, x, labelY);
+                    ctx.font = '12px Arial';
+                });
+
+                ctx.fillStyle = '#999';
+                ctx.font = '11px Arial';
+                ctx.textAlign = 'right';
+                ctx.fillText('重要程度', padding - 10, centerY);
+                ctx.fillText('+100', padding - 10, padding);
+                ctx.fillText('0', padding - 10, centerY);
+                ctx.fillText('-100', padding - 10, canvas.height - padding);
+            }
+        }
+
+        const app = new LifeTimeline();
+
+        window.addEventListener('resize', () => {
+            app.render();
+        });
+    </script>
+</body>
+</html>
